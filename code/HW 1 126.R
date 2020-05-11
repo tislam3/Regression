@@ -1,0 +1,158 @@
+#1. In the Htwt data in the alr4 package, ht = height in centimeters and wt = weight in kilograms for a sample of n = 10 18 year old girls. Interest is in predicting weight from height. 
+
+install.packages('alr4')
+library(alr4)
+
+#(a) Identify the predictor and response.
+  
+#Height is predictor and weight is response.
+
+
+#(b) Draw a scatterplot of wt on the vertical axis versus ht on the horizontal axis. On the basis of this plot, does a simple linear regression model make sense for these data? Why or why not?
+
+library(alr4)
+data(Htwt)
+plot(Htwt$ht, Htwt$wt, 
+     xlab = 'Height in centimeters', ylab = 'Weight in kilograms', 
+     main = 'Scatterplot of Htwt', pch = 20, col = 'blue') 
+
+
+#No a simple linear regression model wouldn't make sense for this data because even though there is some scatter there isn't a good linear relationship to height and weight. Therefore, if a regression line was created, the performance of the model would not be the best since the goal of the model is to minimize SSE, meaning we want less scatter.
+
+
+#(c) Show that $\bar{x}$ = 165.52, $\bar{Y}$ = 59.47, $S_{xx}$ = 472.08, $S_{yy}$ = 731.96 and $S_{xy}$ = 274.79. Compute estimates of the slope and the intercept for the regression of Y on x. Draw the fitted line on your scatterplot.  
+
+avg1 <- mean(Htwt$ht)
+avg1 
+avg2 <- mean(Htwt$wt)
+avg2 
+Sxx <- sum((Htwt$ht-avg1)^2)
+Sxx 
+Syy <- sum((Htwt$wt-avg2)^2)
+Syy 
+Sxy <- sum((Htwt$ht-avg1)*(Htwt$wt-avg2))
+Sxy 
+lm1 <- lm(Htwt$wt ~ Htwt$ht)
+lm1
+summary(lm1)
+
+
+#The estimate on the slope = 0.5821 and estimate on the intercept = -36.8756.  
+#$\hat{y}$ = -36.8756 + 0.5821x  
+#The standard error of the estimate is the residual standard error = 8.456
+
+plot(Htwt$ht, Htwt$wt, 
+     xlab = 'Height in centimeters', ylab = 'Weight in kilograms', 
+     main = 'Scatterplot of Htwt', pch = 20, col = 'blue') 
+abline(lm1, col = 'red')
+
+
+
+#2. This problem uses the UBSprices data set in the alr4 package.
+
+#(a) Draw the plot of Y = bigmac2009 versus x = bigmac2003, the price of a Big Mac hamburger in 2009 and 2003. Give a reason why fitting simple linear regression to the figure in this problem is not likely to be appropriate.
+
+library(alr4)
+data(UBSprices)
+plot(UBSprices$bigmac2003, UBSprices$bigmac2009, 
+     xlab = 'bigmac2003', ylab ='bigmac2009', 
+     main = 'Price of Big Mac in 2003 vs Price of Big Mac in 2009', 
+     pch= 1, col = 'red' )
+
+#The reason why fitting a simple linear regression would not likely be appropriate is beacuse there isn't much scatter even tho there seems to be a upward trend.There is much more of a cluster rather than a scatter. Therefore, there is not a good linear relationship.  
+
+#(b) Plot log(bigmac2009) versus log(bigmac2003) and explain why this graph is more sensibly summarized with a linear regression.**
+#(c) Without using the R function lm(), find the least-squares fit regressing log(bigmac2009) on log(bigmac2003) and add the line in the plot in (b).**
+
+x <- log(UBSprices$bigmac2003)
+x
+y <- log(UBSprices$bigmac2009)
+y
+plot(x,y, xlab = 'bigmac2003', ylab = 'bigmac2009', 
+     main = 'Price of Big Mac in 2003 vs Price of Big Mac in 2009', 
+     pch = 1, col = 'red' )
+mean1 <- mean(x)
+mean1
+mean2 <- mean(y)
+mean2
+Sxy <- sum((x-mean1)*(y-mean2))
+Sxy
+Sxx <-sum((x-mean1)^2)
+Sxx
+slope <- Sxy / Sxx
+slope
+intercept <- mean2 - (mean1*slope)
+intercept
+abline(intercept, slope, col = 'green', lwd = 3)
+
+
+#This graph is more sensibly summarized with linear regression because it is more normally distributed and shows an upward trend linearly in relation to bigmac2003 and bigmac2009. The line of best fit is $\hat{y}$ = 0.6403 + 0.8029x
+
+
+#3. This problem uses the prostate data set in the faraway package.
+
+install.packages('faraway')
+library(faraway)
+
+#(a) Plot lpsa against lcavol. Use the R function lm() to fit the regressions of lpsa on lcavol and lcavol on lpsa.
+
+library(faraway)
+data(prostate)
+plot(prostate$lcavol, prostate$lpsa, 
+     xlab = 'lcavol', ylab = 'lpsa', main = 'lcavol vs lpsa', 
+     pch = 20, col = 'purple')
+
+fit1 <- lm(prostate$lpsa ~ prostate$lcavol)
+fit1
+summary(fit1)
+fit2 <-lm(prostate$lcavol ~ prostate$lpsa)
+fit2
+summary(fit2)
+
+#(b) Display both regression lines on the plot. At what point do the two lines intersect? Give a brief explanation.
+
+plot(prostate$lcavol, prostate$lpsa, xlab = 'lcavol', ylab = 'lpsa', 
+     main = 'lcavol vs lpsa', pch = 20, col = 'purple')
+abline(fit1, col = 'orange')
+fit2_slope <- 1/ (fit2$coeff[2])
+fit2_slope
+fit2_intercept <- (-fit2$coeff[1]/fit2$coeff[2])
+fit2_intercept
+abline(fit2_intercept,fit2_slope, col = 'blue')
+
+mean2 <-mean(prostate$lcavol)
+mean2
+mean3 <-mean(prostate$lpsa)
+mean3
+
+#The point where both regression lines intersect is where the mean of lpsa and the mean of lcavol meet. The point of intersection is (1.35001,2.478387).
+
+
+#4. This problem uses the data set Heights in the alr4 package. Interest is in predicting dheight by mheight.
+
+#(a) Use the R function lm() to fit the regression of the response on the predictor. Draw a scatterplot of the data and add your fitted regression line.
+
+library(alr4)
+data(Heights)
+plot(Heights$mheight, Heights$dheight, 
+     xlab = 'mheight', ylab = 'dheight', 
+     main = 'mheight vs dheight', pch = 1, col = 'orange')
+fit3 <- lm(Heights$dheight ~ Heights$mheight)
+fit3
+abline(fit3, col = 'black', lwd = 2)
+
+
+#(b) Compute the (Pearson) correlation coefficient $r_{xy}$. What does the value of $r_{xy}$ imply about the relationship between dheight and mheight?
+
+mean_m <- mean(Heights$mheight)
+mean_m
+mean_d <- mean(Heights$dheight)
+mean_d
+Sxx1 <- sum((Heights$mheight-mean_m)^2)
+Sxx1
+Syy1 <- sum((Heights$dheight-mean_d)^2)
+Syy1
+Sxy1 <- sum((Heights$mheight-mean_m)*(Heights$dheight-mean_d))
+Sxy1
+correlation <- (Sxy1/(sqrt(Sxx1*Syy1)))
+correlation
