@@ -1,0 +1,407 @@
+---
+title: "PSTAT 126 HW 2"
+author: "Tamjid Islam"
+date: "4/15/2020"
+output: pdf_document
+---
+#### **1. This problem uses the wblake data set in the alr4 package. This data set includes samples of small mouth bass collected in West Bearskin Lake, Minnesota, in 1991. Interest is in predicting length with age. Finish this problem without using lm().**
+
+```{r}
+# install.packages('alr4')
+library(alr4)
+```
+
+**(a) Compute the regression of length on age, and report the estimates, their standard errors, the value of the coefficient of determination, and the estimate of variance. Write a sentence or two that summarizes the results of theses computations.** 
+
+```{r}
+library(alr4)
+data(wblake)
+avg1 <- mean(wblake$Age)
+avg1
+avg2 <- mean(wblake$Length)
+avg2
+Sxy <- sum((wblake$Age-avg1)*(wblake$Length-avg2))
+Sxy
+Sxx <-sum((wblake$Age-avg1)^2)
+Sxx
+slope <- Sxy / Sxx
+slope
+intercept <- avg2 - (avg1*slope)
+intercept
+y_hat <- intercept + slope*wblake$Age
+n <- length(wblake$Length)
+SSE <- sum((wblake$Length-y_hat)^2)
+var <- SSE/(n-2)
+var
+se_age <- sqrt(var) / (sqrt(Sxx))
+se_age
+se_length <- sqrt(var) * (sqrt(1/n + (avg1)^2/Sxx))
+se_length
+SSTO <- sum((wblake$Length-avg2)^2)
+R_2 <- 1- (SSE / SSTO)
+R_2
+```
+
+The regression of length on age is $\hat{Y} = 65.52716 + 30.32389x$. The estimates of this regression is the slope and intercept. The estimate on the slope is ($b_1 = 30.32389$) and the estimate on the intercept is ($b_0 = 65.52716$). The standard error for age is 0.6877291 and standard error for length is 3.197388. The coefficient of determination is 0.816477 implying the proportion of the variation to length. The estimate of the varience is 820.5847.
+
+
+**(b) Obtain a 99% confidence interval for $\beta_1$ from the data. Interpret this interval in the context of the data.**
+```{r}
+t_pct <- qt(p = .995, df = n - 2)
+ci_b1_99 <- slope + c(-1, 1)*t_pct*se_age
+ci_b1_99
+```
+
+We are 99% confident that the small mouth bass collected grows or has a length between 28.54465 and 32.10313 for every unit increase in age.
+
+
+**(c) Obtain a prediction and a 99% prediction interval for a small mouth bass at age 1. Interpret this interval in the context of the data.**
+
+```{r}
+t_pct <- qt(p = .995, df = n - 2)
+t_pct
+x = 1
+n <- length(wblake$Length)
+y_hat1 <- intercept + slope * x
+y_hat1
+new_se <- sqrt(var) * (sqrt(1 + 1/n + ((x-avg1)^2)/Sxx))
+new_se
+ci_pred_99 <- y_hat1 + c(-1, 1)*t_pct*new_se
+ci_pred_99
+```
+
+We are 99% confident that the length of the small mouth bass at age 1 will be between 21.43775 and 170.26436. 
+
+
+#### **2. This problem uses the data set Heights data set in the alr4 package. Interest is in predicting dheight by mheight.**
+
+**(a) Compute the regression of dheight on mheight, and report the estimates, their standard errors, the value of the coefficient of determination, and the estimate of the variance.**
+
+```{r}
+library(alr4)
+data(Heights)
+fit <- lm(Heights$dheight ~ Heights$mheight)
+fit
+summary(fit)
+summary(fit)$sigma^2
+```
+
+The regression of length on age is $\hat{Y} = 29.9174 + 0.5417x$. The estimates of this regression is the slope and intercept. The estimate on the slope is ($b_1 = 0.5417$) and the estimate on the intercept is ($b_0 = 29.9174$). The standard error for mheight is 0.02596 and standard error for dheight is 1.62247. The coefficient of determination is 0.2408 implying the proportion of the variation to dheight. The estimate of the varience is 5.136167.
+
+
+**(b) For this problem, give an interpretation for $\beta_0$ and $\beta_1$.**
+
+$\beta_0$ and $\beta_1$ are involving the population intercept and population slope in a simple regression model respectively. In this case for $\beta_0$, the expected mean value of dheight is 29.9174 when mheight is zero and for $\beta_1$ dheight increases by 0.5417 for every one unit of mheight. 
+
+
+**(c) Obtain a prediction and a 99% prediction interval for a daughter whose mother is 64 inches tall.**
+
+```{r}
+fit <- lm(dheight ~ mheight, data = Heights) 
+fit  
+summary(fit) 
+new <- data.frame(mheight = 64)
+ans <- predict(fit,new, se.fit = TRUE, interval = 'prediction', level = 0.99, type = 'response')
+ans
+
+```
+
+We are 99% confident that the daughter's height will be between 58.74045 and 70.43805 inches when the mother's height is 64 inches. 
+
+
+#### **3. The simple linear regression model $Y_i = \beta_0 + \beta_{1}x_i + \epsilon_i$, i = 1, . . . , n can also be written as **
+\begin{equation*}
+\begin{pmatrix}
+Y_{1}\\
+Y_{2}\\
+\vdots \\
+Y_{n}
+\end{pmatrix}
+=
+\begin{pmatrix}
+1 & x_{1}\\
+1 & x_{2}\\
+\vdots & \vdots \\
+1 & x_{n}
+\end{pmatrix}
+\begin{pmatrix}
+\beta_{0}\\
+\beta_{1}
+\end{pmatrix}
++
+\begin{pmatrix}
+\epsilon_1 \\
+\epsilon_2 \\
+\vdots\\
+\epsilon_n \\
+\end{pmatrix}
+\end{equation*}
+
+**Using matrix notations, the model is**
+\begin{align}
+Y = X\beta + \epsilon.
+\end{align}
+
+**In this problem, we will show that that the least squares estimate is given by:**
+
+\begin{equation*}
+b = 
+\begin{pmatrix}
+b_0 \\
+b_1 \\
+\end{pmatrix}
+(X'X)^{-1}X'Y
+\end{equation*}
+
+
+**(a) Using straightforward matrix multiplication, show that**
+\begin{equation*}
+(X'X) = 
+\begin{pmatrix}
+n & n\bar{x} \\ 
+n\bar{x} & \sum_{i=1}^{n}x_{i}^{2} 
+\end{pmatrix}
+= n
+\begin{pmatrix}
+1 & \bar{x} \\
+\bar{x} & S_{xx} / n + \bar{x}^2
+\end{pmatrix}
+\end{equation*}
+
+\begin{equation*}
+(X'Y) = 
+\begin{pmatrix}
+n\bar{Y} \\ 
+\sum_{i=1}^{n}x_{i}Y_{i} 
+\end{pmatrix}
+= 
+\begin{pmatrix}
+n\bar{Y} \\
+S_{xy} + n\bar{x}\bar{Y}
+\end{pmatrix}
+\end{equation*}
+
+_Solving for (X'X)_
+
+\begin{equation*}
+(X'X) = 
+\begin{pmatrix}
+1 & 1 & \cdots & 1 \\
+X_1 & X_2 & \cdots & X_n \\
+\end{pmatrix}
+\begin{pmatrix}
+1 & X_1 \\
+1 & X_2 \\
+\vdots & \vdots \\
+1 & X_n
+\end{pmatrix} 
+\end{equation*}
+\begin{equation*}
+=
+\begin{pmatrix}
+n & \sum_{i=1}^{n}x_{i} \\
+\sum_{i=1}^{n}x_{i} & \sum_{i=1}^{n}x_{i}^2
+\end{pmatrix}
+=
+\begin{pmatrix}
+n & n\bar{x} \\ 
+n\bar{x} & \sum_{i=1}^{n}x_{i}^{2} 
+\end{pmatrix}
+=
+\begin{pmatrix}
+n & n\bar{x}\\
+n\bar{x} & n*\frac{\sum_{i=1}^{n}x_{i}^2 - n\bar{x}^2 + n\bar{x}^2}{n}
+\end{pmatrix}
+\end{equation*}
+\begin{equation*}
+= n 
+\begin{pmatrix}
+1 & \bar{x}\\
+\bar{x} & \frac{\sum_{i=1}^{n}(x_{i}-\bar{x}) + n\bar{x}^2}{n}
+\end{pmatrix}
+= n
+\begin{pmatrix}
+1 & \bar{x} \\
+\bar{x} & S_{xx} / n + \bar{x}^2
+\end{pmatrix}
+\end{equation*}
+
+_Solving for (X'Y)_
+\begin{equation*}
+(X'Y) = 
+\begin{pmatrix}
+1 & 1 & \cdots & 1 \\
+X_1 & X_2 & \cdots & X_n \\
+\end{pmatrix}
+\begin{pmatrix}
+Y_1 & Y_2 \cdots Y_n
+\end{pmatrix}
+\end{equation*}
+\begin{equation*}
+= 
+\begin{pmatrix}
+\sum_{i=1}^{n}Y_{i} \\ 
+\sum_{i=1}^{n}x_{i}Y_{i} 
+\end{pmatrix}
+=
+\begin{pmatrix}
+n\bar{Y} \\ 
+\sum_{i=1}^{n}x_{i}Y_{i} 
+\end{pmatrix}
+=
+\begin{pmatrix}
+n\bar{Y} \\
+\sum_{i=1}^{n}x_{i}Y_{i} - n\bar{x}\bar{Y} + n\bar{x}\bar{Y} 
+\end{pmatrix}
+=
+\begin{pmatrix}
+n\bar{Y} \\
+\sum_{i=1}^{n}(x_{i} - \bar{x})(Y_{i} - \bar{Y}) + n\bar{x}\bar{Y}
+\end{pmatrix}
+=
+\begin{pmatrix}
+n\bar{Y} \\
+S_{xy} + n\bar{x}\bar{Y}
+\end{pmatrix}
+\end{equation*}
+
+
+**(b) Using the identity**
+\begin{equation*}
+\begin{pmatrix}
+a & b \\
+c & d
+\end{pmatrix}^{-1}
+\frac {1}{ad-bc}
+\begin{pmatrix}
+d & -b \\
+-c & a 
+\end{pmatrix}
+\end{equation*}
+**for a 2 × 2 matrix, show that**
+\begin{equation*}
+(X'X)^{-1} = \frac {1}{S_{xx}}
+\begin{pmatrix}
+S_{xx} / n + \bar{x}^2 & -\bar{x}\\
+-\bar{x} & 1
+\end{pmatrix}
+\end{equation*}
+
+_Applying the identity theorem_ 
+\begin{equation*}
+(X'X)^{-1} = n
+\begin{pmatrix}
+1 & \bar{x} \\
+\bar{x} & S_{xx} / n + \bar{x}^2
+\end{pmatrix}^{-1}
+= 
+\begin{pmatrix}
+n & n\bar{x}\\
+n\bar{x} & S_{xx} + n\bar{x}^2
+\end{pmatrix}^{-1}
+=\frac{1}{S_{xx}}
+\begin{pmatrix}
+S_{xx} / n + \bar{x}^2 & -\bar{x}\\
+-\bar{x} & 1
+\end{pmatrix}
+\end{equation*}
+
+
+**(c) Combine your answers from (a) and (b) to show that**
+\begin{align}
+b = 
+\begin{pmatrix}
+b_0 \\
+b_1
+\end{pmatrix}
+= (X'X)^{-1}X'Y
+\end{align}
+
+**where $b_1 = S_{xy} / S_{xx}$ and $b_0 = \bar{Y} - b_1\bar{x}$ are the least squares estimates from simple linear regression**
+
+\begin{equation*}
+(X'X)^{-1}X'Y
+= \frac{1}{S_{xx}}
+\begin{pmatrix}
+S_{xx} / n + \bar{x}^2 & -\bar{x}\\
+-\bar{x} & 1
+\end{pmatrix}
+\begin{pmatrix}
+n\bar{Y} \\
+S_{xy} + n\bar{x}\bar{Y}
+\end{pmatrix}
+\end{equation*}
+\begin{equation*}
+= \frac{1}{S_{xx}}
+\begin{pmatrix}
+S_{xx}\bar{Y} + n\bar{x}^2\bar{Y} - \bar{x}S_{xy} - n\bar{x}^2\bar{Y} \\
+-n\bar{x}\bar{Y} + S_{xy} + n\bar{x}\bar{Y}
+\end{pmatrix}
+= 
+\begin{pmatrix}
+\bar{Y}-\bar{x}S_{xy} / S_{xx} \\
+S_{xy} / S_{xx}
+\end{pmatrix}
+=
+\begin{pmatrix}
+\bar{Y}-\bar{x}S_{xy} / S_{xx} \\
+b_1
+\end{pmatrix}
+=
+\begin{pmatrix}
+\bar{Y}-\bar{x}b_1 \\
+b_1
+\end{pmatrix}
+=
+\begin{pmatrix}
+b_0 \\
+b_1
+\end{pmatrix}
+=
+b
+\end{equation*}
+
+
+**(d) Simulate a data set with n = 100 observation units such that $Y_i = 1 + 2x_i + \epsilon_i$, i = 1, . . . , n. $\epsilon_i$ follows the standard normal distribution, i.e., a normal distribution with zero mean and unit variance. Use the result in (c) to compute $b_0$ and $b_1$. Show that they are the same as the estimates by lm(). Start with generating x as**
+
+**_n = 100_** \
+**_x = seq(0, 1, length = n)_**
+
+**(Hint: check the help page of rnorm() about how to simulate normally distributed random variables. Use solve() to get an inverse matrix and use t() to get a transpose matrix.)**
+
+```{r}
+n = 100 
+x <- seq(0, 1, length = n)
+y <- 1 + 2*x + rnorm(n)
+X <- cbind(1,x)
+Y <- matrix(y)
+solve <- solve(t(X)%*%X)%*%t(X)%*%Y 
+solve
+fit <- lm(y ~ x)
+fit
+```
+
+The estimates are the same as the lm() function. They are always subject to change with this specific code due to the fact that there are 100 random values that will always be generated.
+
+
+#### **4. This problem uses the UBSprices data set in the alr4 package. The international bank UBS regularly produces a report (UBS, 2009) on prices and earnings in major cities throughout the world. Three of the measures they include are prices of basic commodities, namely 1 kg of rice, a 1 kg loaf of bread, and the price of a Big Mac hamburger at McDonalds. An interesting feature of the prices they report is that prices are measured in the minutes of labor required for a “typical” worker in that location to earn enough money to purchase the commodity. Using minutes of labor corrects at least in part for currency fluctuations, prevailing wage rates, and local prices. The data file includes measurements for rice, bread, and Big Mac prices from the 2003 and the 2009 reports. The year 2003 was before the major recession hit much of the world around 2006, and the year 2009 may reflect changes in prices due to the recession.** 
+**The first graph below is the plot of Y = rice2009 versus x = rice2003, the price of rice in 2009 and 2003, respectively, with the cities corresponding to a few of the points marked.** 
+
+**(a) The line with equation Y = x is shown on this plot as the solid line. What is the key difference between points above this line and points below the line?**
+
+The key difference is that countries/points above the line had an increase in rice price from 2003 compared to 2009. The countries/points under the line had a decrease in rice price from 2003 compared to 2009. 
+
+**(b) Which city had the largest increase in rice price? Which had the largest decrease in rice price?**
+
+Vilnius had the largest increase in rice price. Mumbai had the largest decrease in rice price. 
+
+**(c) Give at least one reason why fitting simple linear regression to the figure in this problem is not likely to be appropriate.**
+
+The reason why fitting a simple linear regression would not likely be appropriate is beacuse there isn't much scatter even tho there seems to be a upward trend.There is much more of a cluster rather than a scatter. Therefore, there is not a good linear relationship.  
+
+**(d) The second graph represents Y and x using log scales. Explain why this graph and the previous graph suggests that using log scales is preferable if fitting simple linear regression is desired. The linear model is shown by the dashed line.**
+
+This graph is preferable with fitting a simple linear regression because it is more normally distributed and shows an upward trend linearly in relation to 2003 rice price and 2009 rice price.
+
+
+
