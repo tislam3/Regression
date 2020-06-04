@@ -1,0 +1,256 @@
+---
+title: "PSTAT 126 HW 4"
+author: "Tamjid Islam"
+date: "5/13/2020"
+output: pdf_document
+---
+
+##### **1. This problem uses the water data set in the alr4 package. For this problem, consider the regression problem with response BSAAM, and three predictors as regressors given by OPBPC, OPRC, and OPSLAKE.**
+
+```{r}
+# install.packages('alr4')
+library(alr4)
+```
+
+**(a) Examine the scatterplot matrix drawn for these three regressors and the response. What should the correlation matrix look like (i.e., which correlations are large and positive, which are large and negative, and which are small)? Compute the correlation matrix to verify your results. (Hint: the R function cor() can be used to compute a correlation matrix.)**
+
+```{r}
+library(alr4)
+data(water)
+pairs(BSAAM ~ OPBPC + OPRC + OPSLAKE, data = water)
+```
+
+All correlations are large and positive based on the scatterplot matrix.
+
+```{r}
+data <- cbind(water$BSAAM, water$OPBPC, water$OPRC, water$OPSLAKE)
+colnames(data) <- c('BSAAM', 'OPBPC', 'OPRC', 'OPSLAKE')
+cor(data)
+```
+
+Based on the correlation matrix, the correlations seem to large and positive values. Thus, our reasoning based on the scatterplot matrix is correct.
+
+
+**(b) Get the regression summary for the regression of BSAAM on these three regressors. Include OPBPC, OPRC, and OPSLAKE sequentially. Explain what the “Pr(> |t|)” column of your output means.**
+
+```{r}
+fit <- lm(BSAAM ~ OPBPC + OPRC + OPSLAKE, data = water)
+summary(fit)
+```
+
+The “Pr(> |t|)” column of the output means the p-values of each variable. Something that is noticed is the higher the t value the lower the p value. It tells us which predictors have and do not have an effect on the response. Thus, telling us and gives us evidences to either reject or fail to reject our null hypothesis. 
+
+
+**(c) Use R to produce an ANOVA table for this regression fit. What is SSR(OPSLAKE|OPBPC, OPRC)? What is SSE(OPBPC, OPRC)?** 
+
+```{r}
+anova(fit)
+fit2 <- lm(BSAAM ~ OPBPC + OPRC, data = water)
+anova(fit2)
+```
+
+SSR(OPSLAKE|OPBPC, OPRC) = 6.4165e+08 and SSE(OPBPC, OPRC) = 3.3312e+09
+
+
+**2. The lathe1 data set from the alr4 package contains the results of an experiment on characterizing the life of a drill bit in cutting steel on a lathe. Two factors were varied in the experiment, Speed and Feed rate. The response is Life, the total time until the drill bit fails, in minutes. The values of Speed and Feed in the data have been coded by computing**
+
+$$Speed = \frac {Actual \; speed \; in \; feet \; per \; minute \; - \; 900} {300}$$
+
+$$Feed = \frac {Actual \; feed \; rate \; in \; thousandths \; of \; an \; inch \; per \; revolution \; - \; 13} {6}$$
+```{r}
+library(alr4)
+data(lathe1)
+```
+
+**(a) Starting with the full second-order model $E(Life | Speed, Feed) = \beta_{0} + \beta_{1} Speed + \beta_{2} Feed + \beta_{11} Speed^2 + \beta_{22} Feed^2 + \beta_{12} Speed * Feed$ use the Box-Cox method to show that an appropriate scale for the response is the logarithmic scale.**
+
+```{r}
+library(alr4)
+data(lathe1)
+fit <- lm(Life ~  Speed + Feed + I(Speed^2) + I(Feed^2) + I(Speed * Feed), data = lathe1)
+summary(fit)
+anova(fit)
+library(MASS)
+bc <- boxcox(fit)
+lambda <- bc$x[which(bc$y == max(bc$y))]
+lambda
+```
+
+Since $\lambda$ is close to zero, there is a log transformation. 
+
+
+**(b) State the null and alternative hypotheses for the overall F-test for this model using log(Life) as the response. Perform the test and summarize results.**
+
+$H_0 : \beta_0 = \beta_1 = \beta_2 = \beta_{11} = \beta{_22} = \beta_{12} = 0$ \
+$H_1 : at \; least \; one \; \beta \ne 0$
+```{r}
+fit <- lm(log(Life) ~  Speed + Feed + I(Speed^2) + I(Feed^2) + I(Speed * Feed), data = lathe1)
+summary(fit)
+fit1 <- lm(log(Life) ~ 1, data = lathe1)
+summary(fit1)
+anova(fit1, fit)
+```
+
+Since p-value is 3.551e-10 < $\alpha$, there is sufficient evidence that at least one of the slope paramters is not equal to 0. (F = 91.236)
+
+
+**(c) Explain the practical meaning of the hypothesis $H_0 : \beta_1 = \beta_{11} = \beta_{12} = 0$ in the context of the above model.** 
+
+The practical meaning of the hypothesis is to test whether or not the slope paramaters are equal to 0. Thus this shows us if any of the predictor variables if they are significant which then tells us if they have any relationship to the response. This is testing to see if the Life of a drill bit is significantly related to Speed, Speed^2 and Speed * Feed. 
+
+
+**(d) Perform a test for the hypothesis in part (c) and summarize your results.**
+
+```{r}
+fit <- lm(log(Life) ~  Speed + Feed + I(Speed^2) + I(Feed^2) + Speed * Feed, data = lathe1)
+fit1 <- lm(log(Life) ~ Speed + I(Speed^2) + I(Speed * Feed), data = lathe1)
+anova(fit1, fit)
+```
+
+Since p-value is 3.703e-07 < $\alpha$, there is sufficient evidence that that Speed, Speed^2 and Speed * Feed are significantly related to Life of a drill bit. (F = 51.061)
+
+
+**3. Consider the following model and the corresponding ANOVA table:**
+
+$$Y = \beta_0 + \beta_1X_1 + \beta_2X_2 + \epsilon_i,$$
+
+**where $\epsilon$ is the usual random error and $Y_{i}^{'}$s are independent.**
+
+\begin{center}
+\begin{tabular}{c c c c c c}
+\multicolumn{6}{c} {\textbf {The ANOVA Table}} \\
+\hline
+\multicolumn{6}{c}{Analysis of Varience} \\
+\hline
+Source & DF & Sum of Square & Mean Square & F Stat & Prob > F \\
+\hline
+Model & * & * & * & * & * \\
+Error & 117 & 17.90761 & 0.15306 \\
+C Total & * & *
+\end{tabular}
+\end{center}
+
+**Further assume $R^2$ = 0.637 for the above model.**
+
+**a) Fill in the missing values (denoted by** ***) in the ANOVA table.**
+
+```{r}
+df <- 2
+df_total <- 117 + 2 
+n <- 120
+SSE <- 17.90761
+MSE <- 0.15306
+SST <- SSE / (1-0.637)
+SST
+SSM <- SST - SSE
+SSM
+MSM <- SSM / df
+MSM
+f_stat <- MSM / MSE
+f_stat
+pf(f_stat, 2, 117, lower.tail = F)
+```
+Model df : 2 \
+C Total df : 119 \
+SSE for Model is : 31.42465 \
+SSE for C Total : 49.33226 \
+Mean Square Model : 15.71232 \
+F-stat : 102.65467 \
+Prob > F (p-value): 1.79849e-26
+
+**b) State the null and alternative hypothesis for the “F-test” in the ANOVA table.**
+
+$H_0 : \beta_1 = \beta_2 = 0$ \
+$H_1 : At \; least \; one \; \beta_i \ne 0$
+
+
+**c) What is the estimated value of $\sigma^2$ based on then results shown in the table?**
+
+```{r}
+sigma2 <- SSE / (n-2)
+sigma2
+```
+
+The estimated value of $\sigma^2$ is 0.1517594 which is the same as the MSE.
+
+**4. A psychologist made a small scale study to examine the nature of the relation between an employee’s emotional stability (Y ) and the employee’s ability to perform in a task group (X). Emotional stability was measured by a written test and ability to perform in a task group (X = 1 if able, X = 0 if unable) was evaluated by the supervisor. The results were as follows:**
+
+\begin{equation*}
+\begin{matrix}
+i: & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8\\
+\hline
+Y_i: & 474 & 619 & 584 & 638 & 399 & 481 & 624 & 582 \\
+X_i: & 0 & 1 & 0 & 1 & 0 & 1 & 1 & 1  
+\end{matrix}
+\end{equation*}
+
+**a) Fit a linear regression and write down the fitted model.**
+
+```{r}
+y <- c(474, 619, 584, 638, 399, 481, 624, 582)
+x <- c(0, 1, 0, 1, 0, 1, 1, 1) 
+cbind(x,y)
+fit <- lm(y ~ x)
+fit
+```
+y = 485.7 + 103.1x
+ 
+
+**b) Write down separate estimated regression equations for “able” employees and “unable” employees.**
+
+```{r}
+beta <- coef(fit)
+yhat <- beta[1] + beta[2] * 0
+yhat
+yhat1 <- beta[1] + beta[2] * 1
+yhat1
+```
+y = 458.667 for unable \
+y = 588.8 for able
+
+**c) Is there a linear relationship between X and Y ? Test at 5% level.**
+
+```{r}
+summary(fit)
+```
+
+Since the p value is 0.108 which is greater than ($\alpha = 0.05$), we fail to reject the $H_0$. Therefore, there is no linear relationship between x and y. 
+
+
+**5. A marketing research trainee in the national office of a chain of shoe stores used the following response function to study seasonal (winter, spring, summer, fall) effects on sales of a certain line of shoes: $E(Y) = \beta_0 + \beta_1X_1 + \beta_2X_2 + \beta_3X_3$. The $X^{'}$s are indicator variables defined as follows:**
+
+\begin{center}
+\begin{tabular}{c | c c c}
+Season & $X_1$ & $X_2$ & $X_3$\\
+\hline
+Winter & 1 & 0 & 0 \\
+Spring & 0 & 1 & 0 \\ 
+Fall & 0 & 0 & 1 \\
+Summer & 0 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+
+**a) State the response functions for the four types of seasons.**
+
+Summer : y = $b_0$ \
+Winter : y = $b_0 + b_1x_1$ so $x_1$ = 1, thus y = $b_0 + b_1$ \
+Spring : y = $b_0 + b_2x_2$ so $x_2$ = 1, thus y = $b_0 + b_2$ \
+Fall : y = $b_0 + b_3x_3$ so $x_1$ = 1, thus y = $b_0 + b_3$
+
+The response functions are relating to summer because summer doesn't have an indicator variable. 
+
+
+**c) Interpret each of the following quantities: (i) $\beta_0$ (ii) $\beta_1$ (iii) $\beta_2$ (iv) $\beta_3$**
+
+(i) $\beta_0$ = The summer effects in sales of a certain line of shoes.
+(ii) $\beta_1$ = Estimated difference in sales between winter and summer. 
+(iii) $\beta_2$ = Estimated difference in sales between spring and summer
+(iv) $\beta_3$ = Estimated difference in sales between fall and summer.
+
+
+
+
+
+
