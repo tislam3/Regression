@@ -1,0 +1,223 @@
+---
+title: "PSTAT 126 HW 5"
+author: "Tamjid Islam"
+date: "5/28/2020"
+output: pdf_document
+---
+
+##### **1. Using the divusa dataset in the faraway package with divorce as the response and the other variables as predictors, implement the following variable selection methods to determine the “best” model:**
+
+```{r}
+# install.packages('faraway')
+library(faraway)
+```
+
+**(a) Stepwise regression with AIC**
+
+```{r}
+library(faraway)
+data(divusa)
+model <- lm(divorce ~ year + unemployed + femlab + marriage + birth + military, data = divusa)
+reduced <- lm(divorce ~ 1, data = divusa)
+step(reduced, scope = list(lower = reduced, upper = model))
+```
+
+The stepwise regression model using the AIC method is: lm(formula = divorce ~ femlab + birth + marriage + year + military, data = divusa)
+
+
+**(b) Best subsets regression with adjusted $R^2$**
+
+```{r}
+library(leaps)
+mod <- regsubsets(cbind(divusa$year, divusa$unemployed, divusa$femlab, divusa$marriage,
+                        divusa$birth, divusa$military), divusa$divorce)
+summary.mod <- summary(mod)
+summary.mod$which
+summary.mod$adjr2
+```
+
+The best subsets regression with adjusted $R^2$ is where there is the largest $R^2$ value. In this case it involves our first, third, forth, fifth and sixth predictor. Thus, year, femlab, marriage, birth and military are the the "best" for this model which the same as part a. 
+
+
+**(c) Best subsets regression with  **
+
+```{r}
+summary.mod$cp  
+```
+
+The "best" subsets regression with adjusted Mallow’s $C_p$ is 5.841314. It is the model that consists of all predictors except the second predictor. Thus, year, femlab, marriage, birth and military are the "best" for this model which is the same as a) and b).
+
+
+##### **2. Refer to the “Job proficiency” data posted on Gauchospace.**
+
+```{r, message = FALSE}
+setwd('~/Documents')
+jobp <- read.csv('Job proficiency.csv', sep = ',')
+```
+
+**(a) Obtain the overall scatterplot matrix and the correlation matrix of the X variables. Draw conclusions about the linear relationship between Y and the predictors.**
+
+```{r}
+pairs(y ~ x1 + x2 + x3 + x4, data = jobp)
+cor(jobp)
+```
+
+Based on these matrices, we can see that there is a positive linear trend betweem y and x3, y and x4, and a slight positive linear relationship between y and x1. There isn't a clear linear relationship between y and x2. 
+
+
+**(b) Using only the first order terms as predictors, find the four best subset regression models according to the $R^2$ criterion.**
+
+```{r}
+library(leaps)
+mod <- regsubsets(cbind(jobp$x1, jobp$x2, jobp$x3, jobp$x4), jobp$y)
+summary.mod <- summary(mod)
+summary.mod$which
+summary.mod$rsq
+```
+
+
+**(c) Since there is relatively little difference in $R^2$ for the four best subset models, what other criteria would you use to help in the selection of the best models? Discuss.**
+
+Since there is relatively little distance some better observations can be made by looking at the best subset model based on adjusted $R^2$ which will look at the largest adjusted $R^2$ value. Another option could be the MSE, where the smallest MSE value would be the best model. Other options could be looking at the AIC method, BIC method or using adjusted Mallow’s $C_p$.
+
+
+##### **3. Refer again to the “Job proficiency” data from problem 2.**
+
+**(a) Using stepwise regression, find the best subset of predictor variables to predict job proficiency. Use $\alpha$ limit of 0.05 to add or delete a variable.**
+
+```{r}
+mod0 <- lm(jobp$y ~ 1)
+add1(mod0, ~. + jobp$x1 + jobp$x2 + jobp$x3 + jobp$x4, test = 'F')
+```
+
+Add x3 into model.
+
+```{r}
+mod1 <- update(mod0, ~. + jobp$x3)
+summary(mod1)
+add1(mod1, ~. + jobp$x1 + jobp$x2 + jobp$x4, test = 'F' )
+```
+
+Add x1 into the model. 
+
+```{r}
+mod2 <- update(mod1, ~. + jobp$x1)
+summary(mod2)
+add1(mod2, ~. + jobp$x2 + jobp$x4, test = 'F')
+```
+
+Add x4 to the model. 
+
+```{r}
+mod3 <- update(mod2, ~. + jobp$x4)
+summary(mod3)
+add1(mod3, ~. + jobp$x2, test = 'F')
+```
+
+x4 has a p-value higher than $\alpha = 0.05$, so it will not be used for the model.
+
+```{r}
+finalmod <- lm(y ~ x3 + x1 + x4, data = jobp)
+summary(finalmod)
+```
+
+The best subset of predictor variables for stepwise regression is x3, x1, and x4. Therefore y ~ x3 + x1 + x4.  
+
+
+**(b) How does the best subset obtained in part (a) compare with the best subset from part (b) of Q2?**
+
+Our part 3(a) best subset matches with one of the four best subset in part 2(b). However, based on the $R^2$ subset for part 2(b) it seems that the best model out for the four presented is the second one containing two predictors based on $R^2$ since it has the largest difference amongst the others. In part part 3(a), there are three predictors that represent the best model for this stepwise regression. 
+
+
+##### **4. Refer to the “Brand preference” data posted on Gauchospace.**
+
+```{r}
+setwd('~/Documents')
+brand <- read.csv('brand preference.csv', sep = ',')
+```
+
+**a) Obtain the studentized deleted residuals and identify any outlying Y observations.**
+
+```{r}
+fit <- lm(y ~ x1 + x2, data = brand)
+rs <- rstudent(fit)
+rs
+which(abs(rs)>3)
+```
+
+There are no outliers since the absolute value of all of our externally studentized residuals are not greater than 3.
+
+
+**b) Obtain the diagonal elements of the Hat matrix, and provide an explanation for any pattern in these values.**
+
+```{r}
+h <- hatvalues(fit)
+h
+```
+
+The hatvalues start at 0.2375 for the first 4 values, then goes to 0.1375 for the next 8 values then goes back to 0.2375 for the last 4 values. This basically calculates the the seperation of predictor variables from the mean. Therefore, it makes sense that the first 4 and last 4 values are larger than the middle 8 values based on the data as they are farther away from the mean. Thus, they are less likely to be accurate.
+
+
+**c) Are any of the observations high leverage point?**
+
+```{r}
+p <- sum(h)
+n <- length(brand$y)
+which(h > 3*p /n)
+```
+
+There are no observations with high leverage points.
+
+
+##### **5. The data below shows, for a consumer finance company operating in six cities, the number of competing loan companies operating in the city (X) and the number per thousand of the company’s loans made in that city that are currently delinquent (Y):**
+
+\begin{equation*}
+\begin{matrix}
+i: & 1 & 2 & 3 & 4 & 5 & 6 \\
+X_i: & 4 & 1 & 2 & 3 & 3 & 4 \\
+Y_i: & 16 & 5 & 10 & 15 & 13 & 22
+\end{matrix}
+\end{equation*}
+
+**Assume that a simple linear regression model is applicable. Using matrix methods, find**
+
+```{r}
+n <- 6
+c <- c(1, 1, 1, 1, 1, 1)
+Xi <- c(4, 1, 2, 3, 3, 4)
+Yi <- c(16, 5, 10, 15, 13, 22)
+```
+
+**(a) The appropriate X matrix.**
+
+```{r}
+X <- matrix(c(c, Xi) , ncol = 2)
+X
+```
+
+
+**(b) Vector b of estimated coefficients.**
+
+```{r}
+tXX <- matrix(c(n, sum(Xi), sum(Xi), sum(Xi^2)), nrow = 2, ncol = 2)
+tXY <- matrix(c(sum(Yi), sum(Xi*Yi)), ncol=1)
+b <- solve(tXX) %*% tXY
+b
+```
+
+
+**(c) The Hat matrix H.**
+
+```{r}
+H <- X %*% solve(tXX) %*% t(X)
+H
+```
+
+
+**6. In stepwise regression, what advantage is there in using a relatively large $\alpha$ value to add variables? Comment briefly.**
+
+The advantage in having a relatively large $\alpha$ value is to allow more predictor variables to be involved to become the best model. It makes it easier on the restrictions by adding or removing predictors to create the best model. 
+
+
+
+
